@@ -30,7 +30,10 @@ var userSchema = new mongoose.Schema(
       type: String,
       default: "user",
     },
-    /*1:37:18 */
+    isBlocked:{
+      type: Boolean,
+      default:false,
+    },
     cart: {
       type: Array,
       default: [],
