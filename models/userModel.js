@@ -30,20 +30,21 @@ var userSchema = new mongoose.Schema(
       type: String,
       default: "user",
     },
-    isBlocked:{
+    isBlocked: {
       type: Boolean,
-      default:false,
+      default: false,
     },
     cart: {
       type: Array,
       default: [],
     },
     address: [{ type: mongoose.Schema.Types.ObjectID, ref: "Address" }],
-    wishlist:[{ type: mongoose.Schema.Types.ObjectID, ref: "Product" }],
+    wishlist: [{ type: mongoose.Schema.Types.ObjectID, ref: "Product" }],
+    refreshToken: { type: String, },
   },
   {
     timestamps: true,
-  },
+  }
 );
 
 //encrypt password
@@ -58,5 +59,3 @@ userSchema.methods.isPasswordMatched = async function (enteredPassword) {
 };
 //Export the model
 module.exports = mongoose.model("User", userSchema);
-
-
