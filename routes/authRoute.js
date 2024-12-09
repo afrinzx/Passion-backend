@@ -27,4 +27,3 @@ router.put("/unblock-user/:id",authMiddleware,isAdmin, unblockUser);
 
 module.exports = router;
 
-/*Refresh token,Logout,product model is completed*/
