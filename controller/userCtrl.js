@@ -5,6 +5,7 @@ const { generateToken } = require("../config/jwtToken");
 const validateMongoDbId = require("../utils/validatemongodbId");
 const { generateRefreshToken } = require("../config/refreshToken");
 const jwt = require("jsonwebtoken");
+//const crypto = require("crypto");
 
 const createUser = asyncHandler(async (req, res) => {
   const email = req.body.email;
@@ -73,22 +74,22 @@ const logout = asyncHandler(async (req, res) => {
   if (!cookie?.refreshToken) throw new Error("No Refresh Token in Cookies");
   const refreshToken = cookie.refreshToken;
   const user = await User.findOne({ refreshToken });
-  if(!user){
-    res.clearCookie("refreshToken",{
+  if (!user) {
+    res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: true,
     });
-    return res.sendStatus(204);//forbidden
+    return res.sendStatus(204); //forbidden
     /*Doesnt show no content.. it shows error.. bt cookies are displayed properly */
   }
-  await User.findOneAndUpdate(refreshToken,{
-    refreshToken:"",
+  await User.findOneAndUpdate(refreshToken, {
+    refreshToken: "",
   });
-  res.clearCookie("refreshToken",{
+  res.clearCookie("refreshToken", {
     httpOnly: true,
     secure: true,
   });
-  res.sendStatus(204);//forbidden
+  res.sendStatus(204); //forbidden
 });
 
 //updated user
@@ -191,6 +192,41 @@ const unblockUser = asyncHandler(async (req, res) => {
   }
 });
 
+const updatePassword = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
+  const { password } = req.body;
+  validateMongoDbId(_id);
+  const user = await User.findById(_id);
+  if (password) {
+    user.password = password;
+    const updatedPassword = await user.save();
+    res.json(updatedPassword); //not displayed
+  } else {
+    res.json(user); //noy displayed 3:50:00
+  }
+});
+
+const forgotPasswordToken = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) throw new Error("User not found with this email");
+  try {
+    const token = await user.createPasswordResetToken();
+    await user.save();
+    const resetURL = `Hi,Please follow this link to reset Your Password.This link is valid till 10 minutes from now.<a href='http://localhost:5000/api/user/reset-password/${token}'>Click Here</a>`;
+    const data={
+      to:email,
+      text: "Hey,User",
+      subject: "Forgot Password Link",
+      htm: resetURL,
+    };
+    sendEmail(data);
+    res.json(token);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 module.exports = {
   createUser,
   loginUserCtrl,
@@ -202,4 +238,6 @@ module.exports = {
   unblockUser,
   handleRefreshToken,
   logout,
+  updatePassword,
+  forgotPasswordToken,
 };
