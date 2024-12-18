@@ -39,11 +39,7 @@ var blogSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    images: {
-      type: String,
-      default:
-        "https://t4.ftcdn.net/jpg/02/07/53/83/360_F_207538366_r6yerLIhPIU5uRkk66T1QUzTcpI9rtzZ.jpg",
-    },
+    images: [],
     author: {
       type: String,
       default: "Admin",
