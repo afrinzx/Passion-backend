@@ -38,7 +38,8 @@ var userSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
-    address: [{ type: mongoose.Schema.Types.ObjectID, ref: "Address" }],
+    address: { type: String },
+    //[{ type: mongoose.Schema.Types.ObjectID, ref: "Address" }],
     wishlist: [{ type: mongoose.Schema.Types.ObjectID, ref: "Product" }],
     refreshToken: { type: String },
     passwordChangedAt: Date,
@@ -69,8 +70,8 @@ userSchema.methods.createPasswordResetToken = async function () {
     .createHash("sha256")
     .update(resettoken)
     .digest("hex");
-  this.passwordResetExpires=Date.now()+30*60*1000;//10mins
-  return resettoken;  
+  this.passwordResetExpires = Date.now() + 30 * 60 * 1000; //10mins
+  return resettoken;
 };
 //Export the model
 module.exports = mongoose.model("User", userSchema);
