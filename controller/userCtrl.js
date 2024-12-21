@@ -1,5 +1,7 @@
 const { Error } = require("mongoose");
 const User = require("../models/userModel");
+const Product = require("../models/prodCategoryModel");
+const Cart = require("../models/cartModel");
 const asyncHandler = require("express-async-handler");
 const { generateToken } = require("../config/jwtToken");
 const validateMongoDbId = require("../utils/validatemongodbId");
@@ -57,7 +59,7 @@ const loginAdmin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   //check if user exists or not
   const findAdmin = await User.findOne({ email });
-  if(findAdmin.role!=='admin') throw new Error("Not Authorized");
+  if (findAdmin.role !== "admin") throw new Error("Not Authorized");
   if (findAdmin && (await findAdmin.isPasswordMatched(password))) {
     const refreshToken = await generateRefreshToken(findAdmin?._id);
     const updateuser = await User.findByIdAndUpdate(
@@ -292,21 +294,85 @@ const resetPassword = asyncHandler(async (req, res) => {
     passwordResetExpires: { $gt: Date.now() },
   });
   if (!user) throw new Error("Token Expired,Please try again later");
-  user.password=password;
-  user.passwordResetToken=undefined;
-  user.passwordResetExpires=undefined;
+  user.password = password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
   await user.save();
   res.json(user);
 });
 
-const getWishlist=asyncHandler(async(req,res)=>{
-  const {_id}=req.user;
+const getWishlist = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
   try {
-    const findUser=await User.findById(_id).populate('wishlist');
+    const findUser = await User.findById(_id).populate("wishlist");
     res.json(findUser);
   } catch (error) {
     throw new Error(error);
   }
+});
+
+const userCart = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
+  const { cart } = req.body;
+  validateMongoDbId(_id);
+  try {
+    let products = [];
+    const user = await User.findById(_id);
+    const alreadyExistCart = await Cart.findOne({ orderby: user._id });
+    if (alreadyExistCart) {
+      alreadyExistCart.deleteOne();
+    }
+    for (let i = 0; i < cart.length; i++) {
+      let object = {};
+      object.product = cart[i]._id;
+      object.count = cart[i].count;
+      object.color = cart[i].color;
+      let getPrice = await Product.findById(cart[i]._id).select("price").exec();
+      object.price = getPrice.price;
+      products.push(object);
+    }
+    let cartTotal = 0;
+    for (let i = 0; i < products.length; i++) {
+      cartTotal = cartTotal + products[i].price * products[i].count;
+    }
+    let newCart = await new Cart({
+      products,
+      cartTotal,
+      orderby: user?._id,
+    }).save();
+    res.json(newCart);
+  } catch (error) {
+    throw new Error(error);
+  }
+}); //dont work..7:50:00..
+
+const getUserCart = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
+  validateMongoDbId(_id);
+  try {
+    const cart = await Cart.findOne({ orderby: _id }).populate(
+      "products.product"
+    );
+    res.json(cart);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const emptyCart = asyncHandler(async (req, res) => {
+  const { _id } = req.user;
+  validateMongoDbId(_id);
+  try {
+    const user = await User.findOne({ _id });
+    const cart = await Cart.findOneAndDelete({ orderby: user._id });
+    res.json(cart);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+const applyCoupon=asyncHandler(async(req,res)=>{
+  /*8:07:22*/
 })
 
 module.exports = {
@@ -326,4 +392,7 @@ module.exports = {
   loginAdmin,
   getWishlist,
   saveAddress,
+  userCart,
+  getUserCart,
+  emptyCart,
 };

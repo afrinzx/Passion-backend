@@ -24,5 +24,4 @@ var cartSchema = new mongoose.Schema(
 );
 
 //Export the model
-module.exports = mongoose.model("Cart", userSchema);
-/*7:43:00*/
+module.exports = mongoose.model("Cart", cartSchema);
