@@ -219,7 +219,7 @@ const uploadImages = asyncHandler(async (req, res) => {
   } catch (error) {
     throw new Error(error);
   }
-});
+});/*6:57:00 */
 
 module.exports = {
   createProduct,
@@ -232,4 +232,3 @@ module.exports = {
   uploadImages,
 };
 
-/*6:57:00 */
